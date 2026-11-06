@@ -74,7 +74,7 @@ async function fetchApi(endpoint) {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
   try {
-    const url = `api/${endpoint}.php?game=${encodeURIComponent(game)}&_t=${Date.now()}`;
+    const url = `api/${endpoint}?game=${encodeURIComponent(game)}&_t=${Date.now()}`;
     const res = await fetch(url, { signal: controller.signal, cache: 'no-store' });
     clearTimeout(timeoutId);
     if (!res.ok) throw new Error('API lỗi ' + res.status);
