@@ -70,7 +70,8 @@ async function loadUser() {
       return;
     }
   } catch (e) {}
-}
+  // Lưu profile vào Supabase
+  try {
     if (window.supabaseClient) {
       window.supabaseClient.from('users').upsert({
         telegram_id: user.id,
