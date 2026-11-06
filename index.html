@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#eef2fb" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Lumina AI — Dự đoán thông minh</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?t=10003" />
+  <style>
+    .orbit, .orbit::before, [class*="orbit"] { display: none !important; opacity: 0 !important; visibility: hidden !important; }
+  </style>
+</head>
+<body>
+  <div id="loader" class="loader">
+    <div class="loader-core">
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+      <div class="core-dot"></div>
+    </div>
+    <div class="loader-brand">LUMINA AI</div>
+    <div class="loader-tagline">Neural Prediction System</div>
+    <div class="loader-status" id="loaderStatus">Đang khởi động hệ thống AI</div>
+    <div class="loader-bar"><div class="loader-bar-fill" id="loaderFill"></div></div>
+    <div class="loader-percent" id="loaderPercent">0%</div>
+  </div>
+
+  <div id="app" class="app hidden">
+    <header class="topbar">
+      <div class="brand">
+        <svg class="brand-mark" width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4L12 2z" fill="url(#brandGrad)"/>
+          <defs>
+            <linearGradient id="brandGrad" x1="0" y1="0" x2="24" y2="24">
+              <stop stop-color="#8b5cf6"/><stop offset="1" stop-color="#22d3ee"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="brand-name">LUMINA AI</span>
+      </div>
+      <div class="status-pill"><span class="dot"></span>ONLINE</div>
+    </header>
+
+    <section class="user-card" id="userCard">
+      <div class="user-avatar-wrap">
+        <img id="userAvatar" class="user-avatar" src="" alt="avatar" />
+        <span class="user-online"></span>
+      </div>
+      <div class="user-info">
+        <div class="user-name-row">
+          <span class="user-name" id="userName">Người dùng</span>
+          <span class="user-verified" title="Đã xác minh">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" aria-label="Đã xác minh">
+              <defs>
+                <linearGradient id="verifiedGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stop-color="#38bdf8" />
+                  <stop offset="50%" stop-color="#0284c7" />
+                  <stop offset="100%" stop-color="#2563eb" />
+                </linearGradient>
+              </defs>
+              <path d="M10.52 2.22a2.1 2.1 0 0 1 2.96 0l1.15 1.13a2.1 2.1 0 0 0 1.88.58l1.6-.29a2.1 2.1 0 0 1 2.45 2.45l-.29 1.6a2.1 2.1 0 0 0 .58 1.88l1.13 1.15a2.1 2.1 0 0 1 0 2.96l-1.13 1.15a2.1 2.1 0 0 0-.58 1.88l.29 1.6a2.1 2.1 0 0 1-2.45 2.45l-1.6-.29a2.1 2.1 0 0 0-1.88.58l-1.15 1.13a2.1 2.1 0 0 1-2.96 0l-1.15-1.13a2.1 2.1 0 0 0-1.88-.58l-1.6.29a2.1 2.1 0 0 1-2.45-2.45l.29-1.6a2.1 2.1 0 0 0-.58-1.88L2.22 13.48a2.1 2.1 0 0 1 0-2.96l1.13-1.15a2.1 2.1 0 0 0 .58-1.88l-.29-1.6a2.1 2.1 0 0 1 2.45-2.45l1.6.29a2.1 2.1 0 0 0 1.88-.58l1.15-1.13Z" fill="url(#verifiedGrad)" />
+              <path d="M8.5 12.25l2.35 2.35 4.75-4.85" stroke="#ffffff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </span>
+        </div>
+        <div class="user-handle" id="userHandle">@username</div>
+      </div>
+      <div class="user-badge">PRO</div>
+    </section>
+
+    <div class="section-subtitle">Nền tảng dự đoán</div>
+
+    <section class="game-card" id="gameCard">
+      <img class="game-logo" src="https://i.postimg.cc/W1cJhgNp/3E497BE2-D59F-46D3-BCCF-FDC2E3A9929C.png" alt="LC79" />
+      <div class="game-meta">
+        <div class="game-name">LC79</div>
+        <div class="game-tag">Dự đoán Tài Xỉu bằng AI</div>
+      </div>
+      <div class="game-arrow"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5.5l6.5 6.5L9 18.5"/></svg></div>
+    </section>
+
+    <div class="chips">
+      <div class="chip"><svg class="ic-bolt" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2.5L5 13h6l-1.5 8.5L18 11h-6l1-8.5z"/></svg>Siêu tốc</div>
+      <div class="chip"><svg class="ic-robot" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="8.5" width="15" height="11" rx="3.2"/><path d="M12 8.5V5.2"/><circle cx="12" cy="4.2" r="1.3" fill="currentColor" stroke="none"/><circle cx="9.4" cy="13.2" r="1.4" fill="currentColor" stroke="none"/><circle cx="14.6" cy="13.2" r="1.4" fill="currentColor" stroke="none"/><path d="M9.6 16.4h4.8"/></svg>AI phân tích</div>
+      <div class="chip"><svg class="ic-target" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="8.6"/><circle cx="12" cy="12" r="4.6"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>Chính xác</div>
+    </div>
+
+    <div class="footer">LUMINA AI SYSTEM · V2.0</div>
+
+    <div class="robot-float">
+      <img src="robot.svg" alt="AI Robot" />
+    </div>
+    <div class="robot-greet" id="robotGreet">Xin chào! Tôi là Lumina AI</div>
+
+    <div class="modal" id="gameModal">
+      <div class="modal-backdrop" id="modalBackdrop"></div>
+      <div class="modal-sheet">
+        <div class="modal-grab"></div>
+        <div class="modal-title">Chọn game LC79</div>
+        <div class="game-options">
+          <button class="game-option" data-game="taixiu">
+            <img class="opt-img" src="image/taixiu.png" alt="Tài Xỉu" />
+            <span class="opt-meta">
+              <span class="opt-name">Tài Xỉu</span>
+              <span class="opt-desc">Phiên thường · Sicbo</span>
+            </span>
+            <span class="opt-arrow"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5.5l6.5 6.5L9 18.5"/></svg></span>
+          </button>
+          <button class="game-option" data-game="taixiu-md5">
+            <img class="opt-img" src="image/taixiu-md5.png" alt="Tài Xỉu MD5" />
+            <span class="opt-meta">
+              <span class="opt-name">Tài Xỉu MD5</span>
+              <span class="opt-desc">Xác minh MD5 · Bảo mật</span>
+            </span>
+            <span class="opt-arrow"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5.5l6.5 6.5L9 18.5"/></svg></span>
+          </button>
+        </div>
+        <button class="modal-close" id="modalClose">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script>
+    if (window.supabase && window.SUPABASE_URL && window.SUPABASE_ANON_KEY && window.SUPABASE_URL.indexOf('YOUR_PROJECT') === -1) {
+      window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+    }
+  </script>
+  <script src="app.js?t=9999"></script>
+</body>
+</html>
