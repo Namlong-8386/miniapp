@@ -1,4 +1,4 @@
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   const game = (req.query.game || 'taixiu').toLowerCase();
   const g = (game === 'taixiu-md5' || game === 'taixiumd5' || game === 'md5') ? 'taixiumd5' : 'taixiu';
   const upstream = `http://103.249.117.228:46566/${g}/dudoan`;
