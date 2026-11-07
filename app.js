@@ -42,47 +42,163 @@ const greets = [
   'Chọn LC79 để bắt đầu nào!',
 ];
 
-async function loadUser() {
+/* ───────── Thông tin người dùng Telegram ───────── */
+
+// Đọc user chắc chắn: ưu tiên initDataUnsafe, dự phòng giải mã chuỗi initData
+function getTelegramUser() {
   const t = window.Telegram && window.Telegram.WebApp;
-  if (!t || !t.initDataUnsafe || !t.initDataUnsafe.user) {
-    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;text-align:center;padding:24px;">Mini app này chỉ chạy trong Telegram. Vui lòng mở qua bot.</div>';
+  if (!t) return null;
+  const u = t.initDataUnsafe && t.initDataUnsafe.user;
+  if (u && u.id) return u;
+  const raw = typeof t.initData === 'string' ? t.initData : '';
+  if (raw) {
+    try {
+      const s = new URLSearchParams(raw).get('user');
+      if (s) {
+        const p = JSON.parse(s);
+        if (p && p.id) return p;
+      }
+    } catch (e) {}
+  }
+  return null;
+}
+
+function escapeXml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+// Avatar dự phòng: chữ cái đầu trên nền gradient (SVG nội tuyến, không cần mạng)
+function initialsAvatar(seed) {
+  const ch = (String(seed || 'U').trim().charAt(0) || 'U').toUpperCase();
+  const svg =
+    "<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 128 128'>" +
+    "<defs><linearGradient id='g' x1='0' y1='0' x2='128' y2='128'>" +
+    "<stop stop-color='#8b5cf6'/><stop offset='1' stop-color='#22d3ee'/></linearGradient></defs>" +
+    "<rect width='128' height='128' fill='url(#g)'/>" +
+    "<text x='64' y='64' dy='0.35em' text-anchor='middle' font-size='54' font-weight='700' " +
+    "fill='#ffffff' font-family='sans-serif'>" + escapeXml(ch) + "</text></svg>";
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+// Gán avatar: photo_url → ảnh đại diện công khai theo username → chữ cái đầu
+function applyAvatar(name, handle, photoUrl) {
+  const img = $('userAvatar');
+  if (!img) return;
+  const fallback = initialsAvatar(name || (handle || '').replace('@', ''));
+  let settled = false;
+  const useFallback = () => {
+    if (settled) return;
+    settled = true;
+    img.onerror = null;
+    img.src = fallback;
+  };
+  img.onerror = useFallback;
+  let src = photoUrl || '';
+  if (!src && handle && handle.charAt(0) === '@' && handle.length > 1) {
+    src = 'https://t.me/i/userpic/320/' + encodeURIComponent(handle.slice(1)) + '.jpg';
+  }
+  if (!src) {
+    useFallback();
     return;
   }
-  const user = t.initDataUnsafe.user;
-  const name = user.first_name + (user.last_name ? ' ' + user.last_name : '');
-  const handle = user.username ? '@' + user.username : '@user';
-  const photo = user && user.photo_url ? user.photo_url : '';
-  $('userName').textContent = name;
-  $('userHandle').textContent = handle;
-  if (photo) {
-    $('userAvatar').src = photo;
-  } else {
-    const initial = (name[0] || 'U').toUpperCase();
-    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><defs><linearGradient id='g' x1='0' y1='0' x2='96' y2='96'><stop stop-color='#8b5cf6'/><stop offset='1' stop-color='#22d3ee'/></linearGradient></defs><rect width='96' height='96' fill='url(#g)'/><text x='50%' y='54%' dominant-baseline='middle' text-anchor='middle' font-size='38' font-weight='700' fill='white' font-family='sans-serif'>${initial}</text></svg>`;
-    $('userAvatar').src = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  img.src = src;
+  // Một số WebView không bắn onerror cho ảnh hỏng → tự kiểm tra lại
+  setTimeout(() => {
+    if (!settled && (!img.complete || img.naturalWidth === 0)) useFallback();
+  }, 4000);
+}
+
+function showNotice(text) {
+  document.body.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:center;height:100vh;' +
+    'font-family:sans-serif;text-align:center;padding:24px;line-height:1.6;">' + text + '</div>';
+}
+
+// Thử lần lượt các đường dẫn API (Vercel không có .php, host PHP cần .php)
+async function getJson(paths, timeoutMs) {
+  for (let i = 0; i < paths.length; i++) {
+    try {
+      const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+      const timer = ctl ? setTimeout(() => ctl.abort(), timeoutMs || 6000) : null;
+      const r = await fetch(paths[i], ctl ? { cache: 'no-store', signal: ctl.signal } : { cache: 'no-store' });
+      if (timer) clearTimeout(timer);
+      if (!r.ok) continue;
+      const ct = (r.headers.get('content-type') || '').toLowerCase();
+      if (ct.indexOf('json') === -1) continue; // .php bị phục vụ dạng mã nguồn → bỏ qua
+      return await r.json();
+    } catch (e) {
+      /* thử đường dẫn kế tiếp */
+    }
   }
-  // Kiểm tra thành viên kênh
+  return null;
+}
+
+// Chỉ chặn khi máy chủ trả lời dứt khoát "không phải thành viên".
+// Mọi lỗi mạng / API chưa sẵn sàng → cho qua, không phá giao diện.
+async function isChannelMember(user) {
+  const q = 'user_id=' + encodeURIComponent(user.id) + '&_t=' + Date.now();
+  const d = await getJson(['/api/checkmember?' + q, '/api/checkmember.php?' + q], 6000);
+  const status = d && d.result && d.result.status;
+  if (!status) return true;
+  return status !== 'left' && status !== 'kicked';
+}
+
+// Lưu profile vào Supabase (không chặn giao diện nếu lỗi)
+function saveProfile(user) {
   try {
-    const r = await fetch('/api/checkmember?user_id=' + user.id);
-    const d = await r.json();
-    const status = d && d.result && d.result.status;
-    if (!['member','administrator','creator'].includes(status)) {
-      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;text-align:center;padding:24px;">Vui lòng tham gia kênh https://t.me/trum4gvpn rồi mở lại miniapp.</div>';
+    if (!window.supabaseClient) return;
+    const p = window.supabaseClient.from('users').upsert({
+      telegram_id: user.id,
+      first_name: user.first_name || null,
+      last_name: user.last_name || null,
+      username: user.username || null,
+      photo_url: user.photo_url || null
+    }, { onConflict: 'telegram_id' });
+    if (p && typeof p.then === 'function') p.then(function () {}, function () {});
+  } catch (e) {}
+}
+
+let userLoadAttempts = 0;
+
+async function loadUser() {
+  const user = getTelegramUser();
+  if (!user) {
+    // initData có thể chưa kịp sẵn sàng → thử lại vài lần rồi mới báo
+    const t = window.Telegram && window.Telegram.WebApp;
+    if (t && userLoadAttempts < 5) {
+      userLoadAttempts++;
+      setTimeout(loadUser, 700);
       return;
     }
-  } catch (e) {}
-  // Lưu profile vào Supabase
-  try {
-    if (window.supabaseClient) {
-      window.supabaseClient.from('users').upsert({
-        telegram_id: user.id,
-        first_name: user.first_name || null,
-        last_name: user.last_name || null,
-        username: user.username || null,
-        photo_url: user.photo_url || null
-      }, { onConflict: 'telegram_id' });
-    }
-  } catch (e) {}
+    showNotice('Mini app này chỉ chạy trong Telegram. Vui lòng mở qua bot.');
+    return;
+  }
+
+  const name = [user.first_name, user.last_name].filter(Boolean).join(' ').trim()
+    || user.username || ('ID ' + user.id);
+  const handle = user.username ? '@' + user.username : 'ID ' + user.id;
+
+  const nameEl = $('userName');
+  if (nameEl) nameEl.textContent = name;
+  const handleEl = $('userHandle');
+  if (handleEl) handleEl.textContent = handle;
+  applyAvatar(name, handle, user.photo_url);
+
+  if (!user.username && !user.photo_url) {
+    const card = $('userCard');
+    if (card) card.setAttribute('data-photo', 'none');
+  }
+  saveProfile(user);
+
+  const member = await isChannelMember(user);
+  if (!member) {
+    showNotice('Vui lòng tham gia kênh https://t.me/trum4gvpn rồi mở lại miniapp.');
+  }
 }
 
 function runLoader() {

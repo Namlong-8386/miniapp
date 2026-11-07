@@ -7,21 +7,70 @@ let game = 'taixiu'; // loại game hiện tại - bị ghi đè bởi ?game= tr
 
 const $ = (id) => document.getElementById(id);
 const tg = window.Telegram && window.Telegram.WebApp;
-if (!tg || !tg.initDataUnsafe || !tg.initDataUnsafe.user) {
-  document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;text-align:center;padding:24px;">Mini app này chỉ chạy trong Telegram. Vui lòng mở qua bot.</div>';
-  throw new Error('Telegram required');
+
+// Đọc user chắc chắn: ưu tiên initDataUnsafe, dự phòng giải mã chuỗi initData
+function getTelegramUser() {
+  const t = window.Telegram && window.Telegram.WebApp;
+  if (!t) return null;
+  const u = t.initDataUnsafe && t.initDataUnsafe.user;
+  if (u && u.id) return u;
+  const raw = typeof t.initData === 'string' ? t.initData : '';
+  if (raw) {
+    try {
+      const s = new URLSearchParams(raw).get('user');
+      if (s) {
+        const p = JSON.parse(s);
+        if (p && p.id) return p;
+      }
+    } catch (e) {}
+  }
+  return null;
 }
-// Kiểm tra thành viên kênh
-(async () => {
-  try {
-    const r = await fetch('/api/checkmember?user_id=' + tg.initDataUnsafe.user.id);
-    const d = await r.json();
-    const status = d && d.result && d.result.status;
-    if (!['member','administrator','creator'].includes(status)) {
-      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;text-align:center;padding:24px;">Vui lòng tham gia kênh https://t.me/trum4gvpn rồi mở lại miniapp.</div>';
-      throw new Error('not member');
+
+function showNotice(text) {
+  document.body.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:center;height:100vh;' +
+    'font-family:sans-serif;text-align:center;padding:24px;line-height:1.6;">' + text + '</div>';
+}
+
+// Gọi API: thử đường dẫn không đuôi (Vercel) rồi tới .php (host PHP)
+async function apiJson(path, query) {
+  const urls = [path + '?' + query, path + '.php?' + query];
+  for (let i = 0; i < urls.length; i++) {
+    try {
+      const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+      const timer = ctl ? setTimeout(() => ctl.abort(), 8000) : null;
+      const r = await fetch(urls[i], ctl ? { cache: 'no-store', signal: ctl.signal } : { cache: 'no-store' });
+      if (timer) clearTimeout(timer);
+      if (!r.ok) continue;
+      const ct = (r.headers.get('content-type') || '').toLowerCase();
+      if (ct.indexOf('json') === -1) continue;
+      return await r.json();
+    } catch (e) {
+      /* thử đường dẫn kế tiếp */
     }
-  } catch (e) {}
+  }
+  return null;
+}
+
+// Chỉ chặn khi máy chủ trả lời dứt khoát "không phải thành viên".
+// Lỗi mạng / API chưa sẵn sàng → cho qua, không phá giao diện.
+(function checkMembership() {
+  let tries = 0;
+  const run = async () => {
+    const user = getTelegramUser();
+    if (!user) {
+      if (tries++ < 5) { setTimeout(run, 700); return; }
+      showNotice('Mini app này chỉ chạy trong Telegram. Vui lòng mở qua bot.');
+      return;
+    }
+    const d = await apiJson('/api/checkmember', 'user_id=' + encodeURIComponent(user.id) + '&_t=' + Date.now());
+    const status = d && d.result && d.result.status;
+    if (status === 'left' || status === 'kicked') {
+      showNotice('Vui lòng tham gia kênh https://t.me/trum4gvpn rồi mở lại miniapp.');
+    }
+  };
+  run();
 })();
 
 // Phân loại game từ tham số ?game=XXX
@@ -70,23 +119,29 @@ function chip(label, value, extraClass = '') {
 }
 
 // Gọi API nội bộ trong thư mục /api/ (ẩn hoàn toàn IP/port máy chủ gốc)
+// Thử đường dẫn không đuôi (Vercel) rồi tới .php (host PHP truyền thống)
 async function fetchApi(endpoint) {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
-  try {
-    const url = `api/${endpoint}?game=${encodeURIComponent(game)}&_t=${Date.now()}`;
-    const res = await fetch(url, { signal: controller.signal, cache: 'no-store' });
-    clearTimeout(timeoutId);
-    if (!res.ok) throw new Error('API lỗi ' + res.status);
-    const data = await res.json();
-    if (data && data.ok === false && data.error) {
-      throw new Error(data.error);
+  const query = `game=${encodeURIComponent(game)}&_t=${Date.now()}`;
+  const urls = [`api/${endpoint}?${query}`, `api/${endpoint}.php?${query}`];
+  let lastErr = new Error('API lỗi');
+  for (let i = 0; i < urls.length; i++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    try {
+      const res = await fetch(urls[i], { signal: controller.signal, cache: 'no-store' });
+      clearTimeout(timeoutId);
+      if (!res.ok) { lastErr = new Error('API lỗi ' + res.status); continue; }
+      const ct = (res.headers.get('content-type') || '').toLowerCase();
+      if (ct.indexOf('json') === -1) { lastErr = new Error('API lỗi định dạng'); continue; }
+      const data = await res.json();
+      if (data && data.ok === false && data.error) throw new Error(data.error);
+      return data;
+    } catch (err) {
+      clearTimeout(timeoutId);
+      lastErr = err;
     }
-    return data;
-  } catch (err) {
-    clearTimeout(timeoutId);
-    throw err;
   }
+  throw lastErr;
 }
 
 // Chạy hiệu ứng phân tích AI trong khoảng 5 giây trước khi công bố dự đoán
