@@ -48,6 +48,7 @@ async function loadUser() {
     document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;text-align:center;padding:24px;">Mini app này chỉ chạy trong Telegram. Vui lòng mở qua bot.</div>';
     return;
   }
+  const user = t.initDataUnsafe.user;
   const name = user.first_name + (user.last_name ? ' ' + user.last_name : '');
   const handle = user.username ? '@' + user.username : '@user';
   const photo = user && user.photo_url ? user.photo_url : '';
