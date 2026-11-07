@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css?t=10011" />
-  <link rel="stylesheet" href="predict.css?t=10011" />
+  <link rel="stylesheet" href="predict.css?t=10012" />
 </head>
 <body>
   <header class="pred-header">
@@ -40,13 +40,60 @@
     </section>
 
     <section class="history-section">
-      <div class="history-title">Lịch Sử Dự Đoán</div>
+      <div class="history-title">
+        <span class="ht-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3.6 12a8.4 8.4 0 1 0 2.5-5.9" />
+            <path d="M3.3 4.7v4.1h4.1" />
+            <path d="M12 8.3v4.2l2.8 1.7" />
+          </svg>
+        </span>
+        <span class="ht-text">Lịch Sử Dự Đoán</span>
+      </div>
       <div class="history-list" id="historyList"></div>
-    <div class="empty-state" id="emptyHistory">
-      <div class="es-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 12H7c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h7c1.1 0 2 .9 2 2v5c0 1.1-.9 2-2 2z"/><path d="M14 2v6h6"/></svg></div>
-      <p>Chưa có dữ liệu lịch sử</p>
-    </div>
-</section>
+      <div class="empty-state" id="emptyHistory">
+        <div class="es-icon">
+          <svg class="es-svg" viewBox="0 0 96 96" width="92" height="92" fill="none" aria-hidden="true" focusable="false">
+            <defs>
+              <linearGradient id="esGrad" x1="22" y1="18" x2="76" y2="80" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#8b5cf6" />
+                <stop offset="0.52" stop-color="#6366f1" />
+                <stop offset="1" stop-color="#0ea5e9" />
+              </linearGradient>
+              <linearGradient id="esCard" x1="16" y1="14" x2="80" y2="82" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#f8f6ff" />
+                <stop offset="1" stop-color="#eef7ff" />
+              </linearGradient>
+              <radialGradient id="esGlow" cx="0" cy="0" r="1" gradientTransform="translate(48 46) rotate(90) scale(40)">
+                <stop stop-color="#a78bfa" stop-opacity="0.32" />
+                <stop offset="1" stop-color="#a78bfa" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+
+            <circle cx="48" cy="46" r="40" fill="url(#esGlow)" />
+
+            <rect x="13" y="15" width="70" height="66" rx="21" fill="url(#esCard)" stroke="rgba(124,58,237,0.14)" stroke-width="1.5" transform="rotate(-7 48 48)" />
+
+            <circle cx="46" cy="45" r="24" fill="#ffffff" stroke="url(#esGrad)" stroke-width="3.4" />
+            <path d="M46 45V30.5" stroke="url(#esGrad)" stroke-width="3.4" stroke-linecap="round" />
+            <path d="M46 45l10.5 6.2" stroke="url(#esGrad)" stroke-width="3.4" stroke-linecap="round" />
+            <circle cx="46" cy="45" r="2.8" fill="url(#esGrad)" />
+
+            <g>
+              <rect x="55" y="54" width="28" height="28" rx="9" fill="url(#esGrad)" stroke="#ffffff" stroke-width="3.2" />
+              <circle cx="63.5" cy="62.5" r="2.1" fill="#ffffff" />
+              <circle cx="69" cy="68" r="2.1" fill="#ffffff" />
+              <circle cx="74.5" cy="73.5" r="2.1" fill="#ffffff" />
+            </g>
+
+            <path d="M25.5 20.5l1.5 4.1 4.1 1.5-4.1 1.5-1.5 4.1-1.5-4.1-4.1-1.5 4.1-1.5z" fill="#a78bfa" opacity="0.55" />
+            <path d="M74 18.5l1.1 3 3 1.1-3 1.1-1.1 3-1.1-3-3-1.1 3-1.1z" fill="#38bdf8" opacity="0.55" />
+          </svg>
+        </div>
+        <p class="es-title">Chưa có dữ liệu lịch sử</p>
+        <p class="es-sub">Kết quả các phiên sẽ xuất hiện tại đây</p>
+      </div>
+    </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -56,6 +103,6 @@
       window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
     }
   </script>
-  <script src="predict.js?t=10011"></script>
+  <script src="predict.js?t=10012"></script>
 </body>
 </html>

@@ -287,9 +287,18 @@ html, body {
 
 /* ---------- History ---------- */
 .history-title {
-  display: flex; align-items: baseline; gap: 8px;
+  display: flex; align-items: center; gap: 9px;
   font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 12px;
 }
+.ht-icon {
+  width: 30px; height: 30px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 10px; color: #ffffff;
+  background: linear-gradient(135deg, #8b5cf6, #0ea5e9);
+  box-shadow: 0 5px 14px rgba(124, 58, 237, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.ht-icon svg { display: block; }
+.ht-text { letter-spacing: -0.2px; }
 .history-count { font-size: 11px; color: var(--muted); font-weight: 600; }
 .history-list { display: flex; flex-direction: column; gap: 10px; }
 .history-item {
@@ -367,13 +376,37 @@ html, body {
 
 /* Empty / error state */
 .empty-state {
-  text-align: center; padding: 38px 16px;
+  text-align: center; padding: 30px 18px 30px;
   color: var(--muted); font-size: 13px; line-height: 1.7; font-weight: 500;
-  background: var(--surface);
-  border: 1px dashed var(--border-strong);
-  border-radius: 18px;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(139, 92, 246, 0.07), transparent 62%),
+    var(--surface);
+  border: 1px dashed rgba(124, 58, 237, 0.24);
+  border-radius: 20px;
 }
-.es-icon { display: flex; justify-content: center; margin-bottom: 8px; color: var(--muted); }
+.es-icon {
+  display: flex; justify-content: center;
+  margin: -2px 0 4px; color: var(--muted);
+}
+.es-svg {
+  width: 92px; height: 92px; display: block;
+  filter: drop-shadow(0 10px 20px rgba(99, 102, 241, 0.16));
+  animation: esFloat 5.2s ease-in-out infinite;
+}
+@keyframes esFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.es-title {
+  margin: 0; font-size: 13.5px; font-weight: 800;
+  color: var(--text); letter-spacing: -0.1px;
+}
+.es-sub {
+  margin: 4px 0 0; font-size: 11.5px; font-weight: 500; color: var(--muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .es-svg { animation: none; }
+}
 
 /* Badge kết quả lịch sử */
 .history-result {
