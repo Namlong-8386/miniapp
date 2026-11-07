@@ -1,0 +1,7 @@
+{
+  "name": "lumina-miniapp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lumina AI Telegram Mini App — static site + Vercel serverless API proxies",
+  "type": "commonjs"
+}

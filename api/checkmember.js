@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   const uid = req.query.user_id;
   if (!uid) { res.status(400).json({ ok: false, error: 'missing user_id' }); return; }
   const token = '9080540135:AAGVJ72MWpPH98XJXqwpJnkSxHe321jCbZQ';
